@@ -1,3 +1,44 @@
+// ================== DATA GAME ==================
+const charactersData = {
+    castorice: {
+        name: "Castorice",
+        element: "quantum",
+        baseStats: { hp: 1630, atk: 524, def: 485, spd: 95 },
+        traces: { cr: 0.187, cd: 0.133, elemental: 0.144 },
+        multipliers: {
+            basic: { type: "single", hp: 0.5 },
+            skill: { type: "blast", primary: 0.5, adjacent: 0.3 },
+            enhanced: { type: "aoe", hp: 0.8 }
+        },
+        talent: { dmgBoost: 0.6 }
+    },
+    seele: {
+        name: "Seele",
+        element: "quantum",
+        baseStats: { hp: 1048, atk: 640, def: 485, spd: 115 },
+        traces: { cr: 0.12, cd: 0, elemental: 0.144 },
+        multipliers: {
+            basic: { type: "single", atk: 1.0 },
+            skill: { type: "single", atk: 2.2 },
+            ult: { type: "single", atk: 4.25 }
+        },
+        talent: { spdBoost: 0.25 } // hanya contoh, tidak dipakai di sini
+    }
+    // Tambahkan karakter lain sesuai kebutuhan
+};
+
+const lightConesData = {
+    none: { name: "None", baseStats: { hp: 0, atk: 0, def: 0 }, effects: [] },
+    cruising: { name: "Cruising in the Stellar Sea", baseStats: { hp: 1058, atk: 529, def: 330 }, effects: ["critRate"] } // contoh, perlu detail
+    // Tambahkan light cone lain
+};
+
+const relicSetsData = {
+    none: { name: "None", effects: [] },
+    genius: { name: "Genius of Brilliant Stars", twoPiece: { quantumDmg: 0.1 }, fourPiece: { defIgnore: 0.1 } }
+    // Tambahkan relic set lain
+};
+
 // ================== FUNGSI PERHITUNGAN ==================
 function calculate() {
     // Ambil nilai input
