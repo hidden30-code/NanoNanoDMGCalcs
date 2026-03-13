@@ -42,6 +42,13 @@ const relicSetsData = {
 // ================== FUNGSI PERHITUNGAN ==================
 function calculate() {
     // Ambil nilai input
+    const charKey = document.getElementById('characterSelect').value;
+    const char = charactersData[charKey];
+    const lightConeKey = document.getElementById('lightConeSelect').value;
+    const lightCone = lightConesData[lightConeKey];
+    const relicKey = document.getElementById('relicSetSelect').value;
+    const relic = relicSetsData[relicKey];
+
     const totalHp = parseFloat(document.getElementById('totalHp').value);
     const charLevel = parseInt(document.getElementById('charLevel').value);
     const enemyLevel = parseInt(document.getElementById('enemyLevel').value);
@@ -53,6 +60,9 @@ function calculate() {
     const talentActive = document.getElementById('talentActive').checked;
     const critRate = parseFloat(document.getElementById('critRate').value) / 100;
     const critDmg = parseFloat(document.getElementById('critDmg').value) / 100;
+    const brokenState = document.getElementById('brokenState').checked;
+    const spd = parseFloat(document.getElementById('spd').value);
+    const teamDmgMulti = parseFloat(document.getElementById('teamDmgMulti').value);
 
     // Validasi
     if (isNaN(totalHp) || totalHp <= 0) {
@@ -64,79 +74,107 @@ function calculate() {
         return;
     }
 
-    // Trace Quantum DMG tetap
-    const quantumTrace = 0.144; // 14.4%
+    // Trace dan bonus dari karakter
+    const traceElemental = char.traces.elemental || 0;
+    const traceCR = char.traces.cr || 0;
+    const traceCD = char.traces.cd || 0;
+
+    // Gabungkan dengan input crit (input sudah termasuk trace?)
+    // Asumsi input crit sudah termasuk trace, jadi kita gunakan langsung
+    // Tapi jika ingin memisahkan, bisa ditambahkan.
+
+    // Efek light cone (contoh sederhana: tambahkan crit rate)
+    let lightConeBonus = { cr: 0, cd: 0, atk: 0, hp: 0, def: 0 };
+    if (lightConeKey === 'cruising') {
+        lightConeBonus.cr = 0.08; // contoh
+    }
+
+    // Efek relic (contoh)
+    let relicBonus = { quantumDmg: 0, defIgnore: 0 };
+    if (relicKey === 'genius') {
+        relicBonus.quantumDmg = 0.1; // 2-piece
+        relicBonus.defIgnore = 0.1;   // 4-piece (asumsi terhadap musuh)
+    }
 
     // Total DMG% multiplier
-    let dmgMultiplier = 1 + quantumTrace + dmgBonus;
-    if (talentActive) dmgMultiplier += 0.6; // talent 60%
+    let dmgMultiplier = 1 + traceElemental + dmgBonus + relicBonus.quantumDmg;
+    if (talentActive) dmgMultiplier += char.talent.dmgBoost || 0;
 
-    // DEF multiplier
-    const defMulti = (charLevel + 20) / ((enemyLevel + 20) + (charLevel + 20));
+    // DEF multiplier dengan mempertimbangkan def ignore dari relic
+    const defIgnore = relicBonus.defIgnore || 0;
+    // Rumus DEF multiplier dengan DEF ignore:
+    // DEF Multi = (charLevel + 20) / ((enemyLevel + 20) * (1 - defIgnore) + (charLevel + 20))
+    const defMulti = (charLevel + 20) / ((enemyLevel + 20) * (1 - defIgnore) + (charLevel + 20));
 
     // RES multiplier
     const resMulti = 1 - enemyRes;
 
-    // CRIT multiplier (rata-rata)
-    const critMulti = 1 + critRate * critDmg;
+    // CRIT multiplier (rata-rata), tambahkan bonus crit dari light cone
+    const finalCritRate = Math.min(critRate + lightConeBonus.cr, 1.0);
+    const critMulti = 1 + finalCritRate * critDmg;
+
+    // Universal DMG Reduction
+    const universalMulti = brokenState ? 1.0 : 0.9;
+
+    // Team Damage Multiplier
+    const teamMulti = teamDmgMulti;
 
     // Tentukan multiplier skill berdasarkan tipe serangan
     let primaryMulti = 0, adjacentMulti = 0, aoeMulti = 0;
-    switch (attackType) {
-        case 'basic':
-            primaryMulti = 0.5; // 50% HP
-            break;
-        case 'skill':
-            primaryMulti = 0.5;
-            adjacentMulti = 0.3;
-            break;
-        case 'enhanced':
-            aoeMulti = 0.8; // 50% + 30% = 80% HP ke semua
-            break;
-        default:
-            break;
+    const skill = char.multipliers[attackType];
+    if (skill.type === 'single') {
+        primaryMulti = skill.atk || skill.hp || 0;
+    } else if (skill.type === 'blast') {
+        primaryMulti = skill.primary;
+        adjacentMulti = skill.adjacent;
+    } else if (skill.type === 'aoe') {
+        aoeMulti = skill.hp || skill.atk || 0;
     }
 
     // Hitung damage per musuh
-    let damages = []; // array of damage per enemy index (0-based)
+    let damages = [];
     let totalDamage = 0;
 
-    if (attackType === 'basic') {
-        // Hanya satu musuh terkena (anggap posisi 1)
-        let base = totalHp * primaryMulti;
-        let dmg = base * dmgMultiplier * defMulti * resMulti * critMulti;
-        damages = [dmg];
-        totalDamage = dmg;
-    } 
-    else if (attackType === 'skill') {
-        // Buat array damage untuk semua musuh, default 0
-        damages = new Array(enemyCount).fill(0);
-        // Primary target
-        let primaryIndex = targetPos - 1;
-        let basePrimary = totalHp * primaryMulti;
-        damages[primaryIndex] = basePrimary * dmgMultiplier * defMulti * resMulti * critMulti;
+    if (attackType === 'basic' || attackType === 'skill' || attackType === 'ult' || attackType === 'enhanced') {
+        // Penyesuaian: untuk skill dengan tipe single, kita gunakan primaryMulti
+        if (skill.type === 'single') {
+            let base = totalHp * primaryMulti; // asumsi scaling HP, bisa juga ATK
+            let dmg = base * dmgMultiplier * defMulti * resMulti * critMulti * universalMulti * teamMulti;
+            damages = [dmg];
+            totalDamage = dmg;
+        } else if (skill.type === 'blast') {
+            damages = new Array(enemyCount).fill(0);
+            let primaryIndex = targetPos - 1;
+            let basePrimary = totalHp * primaryMulti;
+            damages[primaryIndex] = basePrimary * dmgMultiplier * defMulti * resMulti * critMulti * universalMulti * teamMulti;
 
-        // Adjacent (kiri dan kanan)
-        if (primaryIndex > 0) { // ada musuh di kiri
-            let baseAdj = totalHp * adjacentMulti;
-            damages[primaryIndex - 1] = baseAdj * dmgMultiplier * defMulti * resMulti * critMulti;
+            if (primaryIndex > 0) {
+                let baseAdj = totalHp * adjacentMulti;
+                damages[primaryIndex - 1] = baseAdj * dmgMultiplier * defMulti * resMulti * critMulti * universalMulti * teamMulti;
+            }
+            if (primaryIndex < enemyCount - 1) {
+                let baseAdj = totalHp * adjacentMulti;
+                damages[primaryIndex + 1] = baseAdj * dmgMultiplier * defMulti * resMulti * critMulti * universalMulti * teamMulti;
+            }
+            totalDamage = damages.reduce((a, b) => a + b, 0);
+        } else if (skill.type === 'aoe') {
+            let base = totalHp * aoeMulti;
+            let dmg = base * dmgMultiplier * defMulti * resMulti * critMulti * universalMulti * teamMulti;
+            damages = new Array(enemyCount).fill(dmg);
+            totalDamage = dmg * enemyCount;
         }
-        if (primaryIndex < enemyCount - 1) { // ada musuh di kanan
-            let baseAdj = totalHp * adjacentMulti;
-            damages[primaryIndex + 1] = baseAdj * dmgMultiplier * defMulti * resMulti * critMulti;
-        }
-        totalDamage = damages.reduce((a, b) => a + b, 0);
-    } 
-    else if (attackType === 'enhanced') {
-        // Semua musuh kena damage sama
-        let base = totalHp * aoeMulti;
-        let dmg = base * dmgMultiplier * defMulti * resMulti * critMulti;
-        damages = new Array(enemyCount).fill(dmg);
-        totalDamage = dmg * enemyCount;
     }
 
+    // Hitung DMG/AV
+    const actionValue = 10000 / spd;
+    const dmgPerAV = totalDamage / actionValue;
+
     // Format hasil
-    let resultText = `Total Damage: ${Math.round(totalDamage)}\n\n`;
+    let resultText = `Total Damage: ${Math.round(totalDamage)}\n`;
+    resultText += `DMG/AV: ${Math.round(dmgPerAV * 100) / 100} (per AV)\n`;
+    resultText += `Action Value: ${Math.round(actionValue * 100) / 100} AV\n`;
+    resultText += `Status Musuh: ${brokenState ? 'Broken' : 'Tidak Broken'}\n`;
+    resultText += `Team Multiplier: ${teamMulti}\n\n`;
     resultText += `Rincian per musuh (posisi 1 = paling kiri):\n`;
     for (let i = 0; i < damages.length; i++) {
         resultText += `Musuh ${i+1}: ${Math.round(damages[i])}\n`;
@@ -144,7 +182,6 @@ function calculate() {
 
     document.getElementById('result').innerText = resultText;
 }
-
 // ================== SETUP TAMPILAN ==================
 // Sembunyikan/tampilkan input posisi target berdasarkan jenis serangan
 function toggleTargetPosition() {
