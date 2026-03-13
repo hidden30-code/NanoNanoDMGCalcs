@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSR Damage Calculator - Castorice</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ Castorice (Quantum Remembrance)</h1>
+        <p>Kalkulator damage dengan HP scaling, Blast, dan AoE.</p>
+
+        <!-- Stat Dasar Karakter (tetap) -->
+        <div class="info">
+            <p><strong>Base HP:</strong> 1630 | <strong>Base ATK:</strong> 524 | <strong>Base DEF:</strong> 485 | <strong>Base SPD:</strong> 95</p>
+            <p><strong>Trace:</strong> CR +18.7% | CD +13.3% | Quantum DMG +14.4%</p>
+            <p><strong>Talent:</strong> 60% DMG Boost</p>
+        </div>
+
+        <!-- Input HP -->
+        <div class="input-group">
+            <label for="totalHp">Total HP (setelah semua bonus):</label>
+            <input type="number" id="totalHp" value="1630" min="1" step="1">
+        </div>
+
+        <div class="input-group">
+            <label for="charLevel">Level Karakter:</label>
+            <input type="number" id="charLevel" value="80" min="1" max="80">
+        </div>
+
+        <div class="input-group">
+            <label for="enemyLevel">Level Musuh:</label>
+            <input type="number" id="enemyLevel" value="80" min="1" max="80">
+        </div>
+
+        <div class="input-group">
+            <label for="enemyRes">Enemy Quantum RES (%):</label>
+            <input type="number" id="enemyRes" value="20" min="0" max="100" step="1">
+        </div>
+
+        <div class="input-group">
+            <label for="enemyCount">Jumlah Musuh (1-5):</label>
+            <input type="number" id="enemyCount" value="3" min="1" max="5" step="1">
+        </div>
+
+        <!-- Pilihan Serangan -->
+        <div class="input-group">
+            <label for="attackType">Jenis Serangan:</label>
+            <select id="attackType">
+                <option value="basic">Basic Attack (Single Target, 50% HP)</option>
+                <option value="skill" selected>Skill (Blast: 50% primary, 30% adjacent)</option>
+                <option value="enhanced">Enhanced Skill (AoE, 80% HP semua musuh)</option>
+            </select>
+        </div>
+
+        <!-- Posisi target untuk Blast (muncul jika skill dipilih) -->
+        <div class="input-group" id="targetPositionGroup">
+            <label for="targetPos">Posisi Target Utama (1 = paling kiri):</label>
+            <input type="number" id="targetPos" value="2" min="1" max="5" step="1">
+        </div>
+
+        <!-- Bonus DMG -->
+        <div class="input-group">
+            <label for="dmgBonus">Additional DMG Bonus (%):</label>
+            <input type="number" id="dmgBonus" value="0" step="1">
+        </div>
+
+        <div class="input-group">
+            <label for="talentActive">
+                <input type="checkbox" id="talentActive" checked> Talent Active (+60% DMG)
+            </label>
+        </div>
+
+        <!-- Crit -->
+        <div class="input-group">
+            <label for="critRate">Crit Rate (%) :</label>
+            <input type="number" id="critRate" value="23.7" step="0.1" min="0" max="100">
+        </div>
+        <div class="input-group">
+            <label for="critDmg">Crit DMG (%) :</label>
+            <input type="number" id="critDmg" value="63.3" step="0.1" min="50">
+        </div>
+
+        <button onclick="calculate()">Hitung Damage</button>
+
+        <div class="result" id="result">
+            Hasil akan muncul di sini.
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
