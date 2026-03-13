@@ -11,6 +11,45 @@
         <h1>⚔️ Castorice (Quantum Remembrance)</h1>
         <p>Kalkulator damage dengan HP scaling, Blast, dan AoE.</p>
 
+        <!-- Pilih Karakter -->
+<div class="input-group">
+    <label for="characterSelect">Pilih Karakter:</label>
+    <select id="characterSelect">
+        <option value="castorice">Castorice</option>
+        <option value="seele">Seele</option>
+    </select>
+</div>
+
+<!-- Pilih Light Cone -->
+<div class="input-group">
+    <label for="lightConeSelect">Light Cone:</label>
+    <select id="lightConeSelect">
+        <option value="none">None</option>
+        <option value="cruising">Cruising in the Stellar Sea</option>
+    </select>
+</div>
+
+<!-- Pilih Relic Set -->
+<div class="input-group">
+    <label for="relicSetSelect">Relic Set:</label>
+    <select id="relicSetSelect">
+        <option value="none">None</option>
+        <option value="genius">Genius of Brilliant Stars</option>
+    </select>
+</div>
+
+<!-- Input SPD -->
+<div class="input-group">
+    <label for="spd">SPD (untuk DMG/AV):</label>
+    <input type="number" id="spd" value="95" step="1" min="1">
+</div>
+
+<!-- Team Buffs (sederhana) -->
+<div class="input-group">
+    <label for="teamDmgMulti">Team Damage Multiplier (contoh: 1.2 = +20%):</label>
+    <input type="number" id="teamDmgMulti" value="1.0" step="0.01" min="0.1">
+</div>
+
         <!-- Stat Dasar Karakter (tetap) -->
         <div class="info">
             <p><strong>Base HP:</strong> 1630 | <strong>Base ATK:</strong> 524 | <strong>Base DEF:</strong> 485 | <strong>Base SPD:</strong> 95</p>
