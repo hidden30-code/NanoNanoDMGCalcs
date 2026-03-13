@@ -182,6 +182,23 @@ function calculate() {
 
     document.getElementById('result').innerText = resultText;
 }
+
+function loadCharacterStats() {
+    const charKey = document.getElementById('characterSelect').value;
+    const char = charactersData[charKey];
+    if (char) {
+        // Isi base stats ke input (opsional, bisa dibiarkan manual)
+        document.getElementById('totalHp').value = char.baseStats.hp;
+        document.getElementById('spd').value = char.baseStats.spd;
+        // Isi crit rate/dmg? Mungkin trace sudah termasuk, tapi biarkan manual
+        // Kita bisa juga set placeholder
+    }
+}
+
+// Tambahkan event listener
+document.getElementById('characterSelect').addEventListener('change', loadCharacterStats);
+
+
 // ================== SETUP TAMPILAN ==================
 // Sembunyikan/tampilkan input posisi target berdasarkan jenis serangan
 function toggleTargetPosition() {
